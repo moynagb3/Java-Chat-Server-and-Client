@@ -7,27 +7,27 @@ public class ClientHandler implements Runnable {
 	
 	static int nextClientId;
 	
-	BufferedReader reader;
-	PrintWriter writer;
+	ObjectInputStream is;
+	ObjectOutputStream os;
+	
 	Server server;
 	Socket clientSocket;
 	int clientId;
 	
+	//Constructor
 	public ClientHandler(Server server, Socket clientSocket) {
 		
 		try {
+			
 			this.clientSocket = clientSocket;
 			this.server = server;
 			this.clientId = nextClientId;
 			nextClientId++;
-
-			//System.out.println("Client " + clientId + " connected to Server");
 			
-			writer = new PrintWriter(clientSocket.getOutputStream());
-			server.register(clientId, writer);
+			os = new ObjectOutputStream(clientSocket.getOutputStream());
+			server.register(clientId, os);
 			
-			InputStreamReader isReader = new InputStreamReader(clientSocket.getInputStream());
-			reader = new BufferedReader(isReader);
+			is = new ObjectInputStream(clientSocket.getInputStream());
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -38,35 +38,37 @@ public class ClientHandler implements Runnable {
 	@Override
 	public void run() {
 	
-		String message;
+		Object o;
 		
 		try {
 			
-			while((message = reader.readLine()) != null) {
+			while((o = is.readObject()) != null) {
+				//instead of broadcasting pass the message to a filter to decide who it should be sent
+				String message = (String) o;
 				server.broadcast(this.clientId +": " +  message);
 			}//close while
 			
-			closeSocket();
-			
 		} catch (Exception e) {
-			e.printStackTrace();
+			closeSocket();
+			//e.printStackTrace();
 		}
 		
 	}//end run
 	
 	//gracefully close the socket connection 
   public void closeSocket() { 
-    
+   
   	try {
-  		//this.os.close();
-      reader.close();
+  		os.close();
+      is.close();
       clientSocket.close();
       
-      //System.out.println("Client " + clientId + " disconnected from Server");
-      
+      System.out.println("Client " + clientId + " disconnected from Server");
       server.deregister(clientId);
+      
     } catch (Exception e) {
-      System.out.println("XX. " + e.getStackTrace());
+    	
+      System.out.println(e.getStackTrace());
     }
   	
   }//End closeSocket method

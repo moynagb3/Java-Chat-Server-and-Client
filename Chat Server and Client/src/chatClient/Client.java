@@ -4,8 +4,7 @@ import java.io.*;
 import java.net.*;
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.StyledDocument;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -18,9 +17,9 @@ public class Client implements ChatClient {
 	JTextField outgoing; 
 	JButton connectButton, sendButton;
 	
-	BufferedReader reader; 
-	PrintWriter writer; 
-	Socket socket;
+	Socket socket;					//client Socket
+	ObjectOutputStream os; 	//outputStream
+	ObjectInputStream is;		//inputStream
 	
 	boolean connected;
 	
@@ -80,17 +79,20 @@ public class Client implements ChatClient {
 		
 	} // close go
 
-	private void setUpNetworking() {
+	private void connectToServer() {
 		
 		try {
 			socket = new Socket(SERVER_IP, PORT_NUM);
-			InputStreamReader streamReader = new InputStreamReader(socket.getInputStream()); 
-			reader = new BufferedReader(streamReader);
 			
-			writer = new PrintWriter(socket.getOutputStream()); 
+			is = new ObjectInputStream(socket.getInputStream());
+			os = new ObjectOutputStream(socket.getOutputStream());
+			
+//			is = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+//			os = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+			
 			System.out.println("networking established");
 			
-			Thread readerThread = new Thread(new IncommingStreamReader(this, reader));
+			Thread readerThread = new Thread(new IncommingStreamReader(this, is));
 			readerThread.start();
 			
 			setConnected(true);
@@ -105,6 +107,19 @@ public class Client implements ChatClient {
 		}
 	} // close setUpNetworking
 
+	private void disconnectFromServer() {
+		
+		try {
+			socket.close();
+			setConnected(false);
+			setOutgoingFieldEnabled(false);
+			connectButton.setText("<html>Connect</html>");
+			displayMessage("Not Connected to Server!");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 //-------------------------------------------------------------------------------------//
 //-------------------------------------------------------------------------------------//
 	
@@ -141,8 +156,8 @@ public class Client implements ChatClient {
 				
 				try {
 					System.out.println("Client is writing -> " + outgoing.getText());
-					writer.println(outgoing.getText()); 
-					writer.flush();
+					os.writeObject(outgoing.getText()); 
+					os.flush();
 					System.out.println("Client is FINISHED writing");
 				} catch(Exception ex) {
 					ex.printStackTrace(); 
@@ -163,7 +178,9 @@ public class Client implements ChatClient {
 		public void actionPerformed(ActionEvent e) {
 			
 			if(!connected)	{
-				setUpNetworking();
+				connectToServer();
+			} else {
+				disconnectFromServer();
 			}
 			
 		}

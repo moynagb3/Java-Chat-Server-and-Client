@@ -1,36 +1,37 @@
 package chatClient;
 
-import java.io.BufferedReader;
+
+import java.io.ObjectInputStream;
 
 public class IncommingStreamReader implements Runnable {
 
 	Client chatClient;
-	BufferedReader reader;
+	ObjectInputStream is;
 	
-	IncommingStreamReader (Client chatClient, BufferedReader reader) {
+	IncommingStreamReader (Client chatClient, ObjectInputStream is) {
 		
 		this.chatClient = chatClient;
-		this.reader = reader;
+		this.is = is;
 		
 	}
 	
 	public void run() {
 		
-		String message; 
+		Object o; 
 		
 		try {	
 			
-			while ((message = reader.readLine()) != null) { 
+			while ((o = is.readObject()) != null) {
+				String message = (String) o;
 				System.out.println("-> client recieved: " + message); 
 				chatClient.displayMessage(message);
 			} // close while
-			
+						
+		} catch(Exception e) {
 			chatClient.setConnected(false);
 			chatClient.setOutgoingFieldEnabled(false);
 			chatClient.displayMessage("Connection to Server has been Lost!");
-			
-		} catch(Exception ex) {
-			ex.printStackTrace();
+			//e.printStackTrace();
 		}
 
 	} // close run

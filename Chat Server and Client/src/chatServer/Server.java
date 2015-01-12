@@ -11,7 +11,7 @@ public class Server implements Broadcaster, Registrar{
 	
 	private boolean listening;
 	
-	Map <Integer, PrintWriter> clientOutputStreams;
+	Map <Integer, ObjectOutputStream> clientOutputStreams;
 
 	public void initialise (){
 		
@@ -22,22 +22,20 @@ public class Server implements Broadcaster, Registrar{
 				
 				ServerSocket serverSocket = new ServerSocket(PORT_NUM);
 				
-				
 				try {
-					
 					
 					while(listening) {
 						
 						System.out.println("Server is listening on port: " + PORT_NUM);
+					
+						Socket clientSocket = serverSocket.accept();	
+						Thread t = new Thread(new ClientHandler(this, clientSocket));
+						t.start();
 						
-							Socket clientSocket = serverSocket.accept();	
-							Thread t = new Thread(new ClientHandler(this, clientSocket));
-							t.start();
-							
-							System.out.println("Client connected from: " + clientSocket.getInetAddress() 
-																														+ "::" + clientSocket.getPort());		
-							
-							System.out.println(clientOutputStreams.size() + " clients connected to server.");
+						System.out.println("Client connected from: " + clientSocket.getInetAddress() 
+																													+ "::" + clientSocket.getPort());		
+						
+						System.out.println(clientOutputStreams.size() + " clients connected to server.");
 							
 					}//End while
 					
@@ -53,9 +51,10 @@ public class Server implements Broadcaster, Registrar{
 	
 //--------------------- Implement the Registrar Interface -----------------------------//
 //-------------------------------------------------------------------------------------//
-	
-	public void register(int id, PrintWriter writer) {
-		clientOutputStreams.put(id, writer);
+
+	//method that registers 
+	public void register(int id, ObjectOutputStream os) {
+		clientOutputStreams.put(id, os);
 	}
 
 	public void deregister(int id){
@@ -69,10 +68,10 @@ public class Server implements Broadcaster, Registrar{
 		
 		synchronized(clientOutputStreams) {
 			
-			for (PrintWriter writer : clientOutputStreams.values()) {
+			for (ObjectOutputStream os : clientOutputStreams.values()) {
 				try {
-					writer.println(message);
-					writer.flush();
+					os.writeObject(message);
+					os.flush();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
