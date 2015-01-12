@@ -8,13 +8,14 @@ public class IncommingStreamReader implements Runnable {
 	BufferedReader reader;
 	
 	IncommingStreamReader (Client chatClient, BufferedReader reader) {
+		
 		this.chatClient = chatClient;
 		this.reader = reader;
+		
 	}
 	
 	public void run() {
 		
-		System.out.println("Client reader Thread is running....");
 		String message; 
 		
 		try {	
@@ -25,7 +26,7 @@ public class IncommingStreamReader implements Runnable {
 			} // close while
 			
 			chatClient.setConnected(false);
-			chatClient.setEnabled(false);
+			chatClient.setOutgoingFieldEnabled(false);
 			chatClient.displayMessage("Connection to Server has been Lost!");
 			
 		} catch(Exception ex) {

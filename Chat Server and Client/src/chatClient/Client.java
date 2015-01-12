@@ -12,7 +12,8 @@ import java.awt.event.*;
 public class Client implements ChatClient {
 	
 	private static final int PORT_NUM = 5055;
-	private static final String SERVER_IP = "127.0.0.1"; //"192.168.1.130";
+	private static final String SERVER_IP = "127.0.0.1";
+	
 	JTextPane incoming;
 	JTextField outgoing; 
 	JButton connectButton, sendButton;
@@ -74,7 +75,7 @@ public class Client implements ChatClient {
 		
 		frame.setSize(320,400);
 		frame.pack();
-		setEnabled(false);
+		setOutgoingFieldEnabled(false);
 		frame.setVisible(true);
 		
 	} // close go
@@ -93,7 +94,7 @@ public class Client implements ChatClient {
 			readerThread.start();
 			
 			setConnected(true);
-			setEnabled(true);
+			setOutgoingFieldEnabled(true);
 			connectButton.setText("<html>Disconnect</html>");
 			displayMessage("Connected to Server!");
 			
@@ -107,7 +108,7 @@ public class Client implements ChatClient {
 //-------------------------------------------------------------------------------------//
 //-------------------------------------------------------------------------------------//
 	
-	public void setEnabled(boolean enabled) {
+	public void setOutgoingFieldEnabled(boolean enabled) {
 		outgoing.setEnabled(enabled);
 		sendButton.setEnabled(enabled);
 	}

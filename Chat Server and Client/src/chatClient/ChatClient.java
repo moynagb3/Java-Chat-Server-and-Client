@@ -6,6 +6,6 @@ public interface ChatClient {
 	
 	public void setConnected(boolean connected);
 	
-	public void setEnabled(boolean enabled);
+	public void setOutgoingFieldEnabled(boolean enabled);
 	
 }
